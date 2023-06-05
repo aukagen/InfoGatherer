@@ -4,3 +4,5 @@ scrapy
 pprint
 termcolor
 datetime
+pandas
+jinja2

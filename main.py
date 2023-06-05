@@ -1,6 +1,6 @@
 from requests_html import HTMLSession
 import pprint
-from termcolor import colored
+import termcolor
 #import scrapy --> https://scrapeops.io/python-scrapy-playbook/scrapy-beginners-guide-user-agents-proxies/
     # https://scrapy.org/
 from datetime import datetime
@@ -19,7 +19,7 @@ class Gather:
     def __init__(self):
         #self.PAN_results = {}#{"Article#":{"Title":"", "URL":"", "kw_match":False,  "Summary":""}}
         #self.TM_result = {}
-        self.keywords_list = ["malware", "threats", "threat", "AI", "ghat-gpt", "attack", "attacks", "ransomware"]
+        self.keywords_list = ["malware", "threats", "threat", "AI", "ghat-gpt", "attack", "attacks", "ransomware", "cloud", "hack", "risk", "risks", "russia", "china", "warfare", "cyberwarfare"]
 
     def gather(self, url, xpath, header_xpath, url_xpath, extra_url):
         resultslist = {}
@@ -29,21 +29,16 @@ class Gather:
 
         count = 0
         for header in headings:
-            count += 1
-            resultslist[f"Article{count}"] = {"Title":"", "URL":"", "kw_match":False}#, "Summary":""}#
             header_txt = header.xpath(header_xpath)
             article_url = header.xpath(url_xpath)
-            resultslist[f"Article{count}"]["Title"] = header_txt[0]
-            if "https" in article_url[0]:
-                resultslist[f"Article{count}"]["URL"] = article_url[0]
-            else:
-                #print("LINK: ", extra_url + article_url[0])    # REMOVE
-                resultslist[f"Article{count}"]["URL"] = extra_url + article_url[0]
-
+            count += 1
             for kw in self.keywords_list:
                 if kw.lower() in header_txt[0].lower():
-                    resultslist[f"Article{count}"]["kw_match"] = True
-        
+                    if "https" in article_url[0]:
+                        resultslist[f"Article{count}"] = {"Title":header_txt[0], "URL":article_url[0]}#"kw_match":False, "Summary":""}#
+                    else:
+                        resultslist[f"Article{count}"] = {"Title":header_txt[0], "URL":extra_url + article_url[0]}
+            #resultslist[f"Article{count}"]["Title"] = header_txt[0]
         return resultslist
 
 
@@ -70,11 +65,18 @@ class Sources:
         header_xpath = '//li/div/div[@class="titlelist"]/h3/a/text()'
         url_xpath = '//li/div[@class="enclose"]/a/@href'
         
-
         reslist = Gather().gather(news_url, xpath, header_xpath, url_xpath, extra_url)
         return reslist
         
-        
+    def wired(self):
+        news_url = "https://www.wired.com/category/security/"
+        extra_url = "https://www.wired.com/"
+        xpath = "//div[1]/div/main/div[1]/div[2]/div/div/div/div/div[2]/div/div[2]/a"
+        header_xpath = "a/h3/text()"
+        url_xpath = "a/@href"
+
+        reslist = Gather().gather(news_url, xpath, header_xpath, url_xpath, extra_url)
+        return reslist
         
 
 
@@ -83,17 +85,6 @@ class Main:
         #self.PAN_res = Sources().PAN()
         #self.TM_res = Sources().TM()
         pass
-    '''
-    def printing(self, dictionary):
-        #Print headers too, to categorise the source of where the research/news is taken from...
-        obj = dictionary #Sources().PAN()
-        for i in range(1, len(obj)):
-            if obj[f"Article{i}"]["kw_match"] == True:
-                print(colored(f"MATCH: {obj[f'Article{i}']}", 'red'))
-            else:
-                print(obj[f'Article{i}'])
-        #pprint.pprint(PAN_obj)
-    '''
 
     def neat_printing(self, dictionary):
         #pd.set_option('display.max_rows', 9)
@@ -111,25 +102,18 @@ class Main:
     def highlight(self, colour):
         #matches = []
         return f"color: {colour}" if v == True else None
-        '''
-        for article in dict:
-            print(article)
-            if dict[article]["kw_match"] == True:
-                print("MATCH")
-                color = "red"
-                return 'background-color: %s' % color
-                #matches.append(dict[article])
-        '''
         #return ['background-color: yellow' for match in matches]
         #return 'background-color: %s' % color
 
 
 
     def main(self):
-        #self.printing(Sources().PAN())
-        #self.printing(Sources().TM())
+        termcolor.cprint("##### Trendmicro #####", 'red')
         self.neat_printing(Sources().TM())
+        termcolor.cprint("\n\n\n\n\n##### Unit 42 #####", 'red')
         self.neat_printing(Sources().PAN())
+        termcolor.cprint("\n\n\n\n\n##### Wired #####", 'red')
+        self.neat_printing(Sources().wired())
 
 ### Printing all the information neatly ###
 # Use a terminal GUI for this / tables
